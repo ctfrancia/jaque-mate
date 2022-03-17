@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -9,7 +10,17 @@ import (
 )
 
 func (app *application) createTournamentHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "create a new tournament")
+	var input struct {
+		TournamentName string   `json:"tournamentName"`
+		Tags           []string `json:"tags"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		app.errorResponse(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	fmt.Fprintf(w, "%+v\n", input)
 }
 
 func (app *application) showTournamentHandler(w http.ResponseWriter, r *http.Request) {
