@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"strconv"
+	"time"
 
-	"github.com/julienschmidt/httprouter"
+	"jaque-mate.ctfrancia.es/internal/data"
 )
 
 func (app *application) createTournamentHandler(w http.ResponseWriter, r *http.Request) {
@@ -13,12 +13,23 @@ func (app *application) createTournamentHandler(w http.ResponseWriter, r *http.R
 }
 
 func (app *application) showTournamentHandler(w http.ResponseWriter, r *http.Request) {
-	params := httprouter.ParamsFromContext(r.Context())
-	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)
-
-	if err != nil || id < 1 {
+	id, err := app.readIDParam(r)
+	if err != nil {
 		http.NotFound(w, r)
+		return
 	}
 
-	fmt.Fprintf(w, "show the details of movie %d\n", id)
+	tournament := data.Tournament{
+		ID:             id,
+		CreatedAt:      time.Now(),
+		TournamentName: "Cool Tournament Name",
+		Tags:           []string{"fast", "barcelona", "rated"},
+		Version:        1,
+		Empty:          "foo",
+	}
+	err = app.writeJSON(w, http.StatusOK, envelope{"tournament": tournament}, nil)
+	if err != nil {
+		app.logger.Println(err)
+		http.Error(w, "Server encountered an issue", http.StatusInternalServerError)
+	}
 }
