@@ -6,16 +6,30 @@ import (
 	"time"
 
 	"jaque-mate.ctfrancia.es/internal/data"
+	"jaque-mate.ctfrancia.es/internal/validator"
 )
 
 func (app *application) createTournamentHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		TournamentName string   `json:"tournamentName"`
 		Tags           []string `json:"tags"`
+		// LastDateOfRegistration time.Time
 	}
 	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	tournament := &data.Tournament{
+		TournamentName: input.TournamentName,
+		Tags:           input.Tags,
+	}
+
+	v := validator.New()
+
+	if data.ValidateTournament(v, tournament); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
